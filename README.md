@@ -215,7 +215,9 @@ This project is licensed under the MIT License.
 ## Dokumentasi Lengkap
 
 - **[SETUP-GUIDE.md](./SETUP-GUIDE.md)** - Panduan setup lengkap step-by-step
-- **[GITHUB-SETUP.md](./GITHUB-SETUP.md)** - **Panduan menghubungkan project ke GitHub**
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Penjelasan arsitektur dan server online
+- **[FRONTEND-DEPLOYMENT.md](./FRONTEND-DEPLOYMENT.md)** - **Penjelasan frontend: development vs production**
+- **[GITHUB-SETUP.md](./GITHUB-SETUP.md)** - Panduan menghubungkan project ke GitHub
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Panduan deployment detail
 - **[TESTING-CHECKLIST.md](./TESTING-CHECKLIST.md)** - Checklist testing lengkap
 - **[supabase/README.md](./supabase/README.md)** - Setup Supabase

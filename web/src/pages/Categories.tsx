@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCategories } from '../hooks/useCategories';
 import { createCategory, updateCategory, deleteCategory } from '../services/categoryService';
+import Navigation from '../components/Navigation';
+import EmojiPicker from '../components/EmojiPicker';
 import type { Category, TransactionType } from '../types';
 
 const DEFAULT_CATEGORIES: { name: string; type: TransactionType; icon: string; color: string }[] = [
@@ -106,6 +108,7 @@ export default function Categories() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Navigation />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Categories</h1>
@@ -182,13 +185,13 @@ export default function Categories() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Icon (emoji)
                   </label>
-                  <input
-                    type="text"
+                  <EmojiPicker
                     value={formData.icon}
-                    onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    maxLength={2}
+                    onChange={(emoji) => setFormData({ ...formData, icon: emoji })}
                   />
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Pilih emoji dari picker atau ketik manual
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

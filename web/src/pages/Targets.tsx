@@ -2,13 +2,20 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getTargets, createTarget, updateTarget, deleteTarget } from '../services/targetService';
 import { getTransactions } from '../services/transactionService';
+import Navigation from '../components/Navigation';
 import { format, startOfDay, startOfWeek, startOfMonth, endOfDay, endOfWeek, endOfMonth, isBefore } from 'date-fns';
+import { getPaydayDate } from '../services/userSettingsService';
+import {
+  getPaydayPeriodStart,
+  getPaydayPeriodEnd,
+} from '../utils/paydayPeriod';
 import type { Target, PeriodType, TargetType } from '../types';
 
 export default function Targets() {
   const { user } = useAuth();
   const [targets, setTargets] = useState<Target[]>([]);
   const [targetProgress, setTargetProgress] = useState<Record<string, number>>({});
+  const [paydayDate, setPaydayDate] = useState<number>(1);
   const [showForm, setShowForm] = useState(false);
   const [editingTarget, setEditingTarget] = useState<Target | null>(null);
   const [loading, setLoading] = useState(false);
@@ -18,6 +25,12 @@ export default function Targets() {
     period_type: 'monthly' as PeriodType,
     deadline: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
   });
+
+  useEffect(() => {
+    if (user) {
+      getPaydayDate(user.id).then(setPaydayDate);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (user) {
@@ -61,8 +74,9 @@ export default function Targets() {
             endDate = endOfWeek(new Date());
             break;
           case 'monthly':
-            startDate = startOfMonth(new Date());
-            endDate = endOfMonth(new Date());
+            // Use payday period instead of calendar month
+            startDate = getPaydayPeriodStart(paydayDate);
+            endDate = getPaydayPeriodEnd(paydayDate);
             break;
         }
 
@@ -151,6 +165,7 @@ export default function Targets() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Navigation />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Targets</h1>

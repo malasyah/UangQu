@@ -3,7 +3,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { getLimits, createLimit, updateLimit, deleteLimit, checkLimitViolations } from '../services/limitService';
 import { useCategories } from '../hooks/useCategories';
 import LimitWarning from '../components/LimitWarning';
+import Navigation from '../components/Navigation';
 import { format, startOfDay, startOfWeek, startOfMonth, endOfDay, endOfWeek, endOfMonth } from 'date-fns';
+import { getPaydayDate } from '../services/userSettingsService';
+import {
+  getPaydayPeriodStart,
+  getPaydayPeriodEnd,
+} from '../utils/paydayPeriod';
 import type { Limit, PeriodType } from '../types';
 
 export default function Limits() {
@@ -11,6 +17,7 @@ export default function Limits() {
   const { categories } = useCategories(user?.id);
   const [limits, setLimits] = useState<Limit[]>([]);
   const [violations, setViolations] = useState<any[]>([]);
+  const [paydayDate, setPaydayDate] = useState<number>(1);
   const [showForm, setShowForm] = useState(false);
   const [editingLimit, setEditingLimit] = useState<Limit | null>(null);
   const [loading, setLoading] = useState(false);
@@ -20,6 +27,12 @@ export default function Limits() {
     category_id: '',
     start_date: format(new Date(), 'yyyy-MM-dd'),
   });
+
+  useEffect(() => {
+    if (user) {
+      getPaydayDate(user.id).then(setPaydayDate);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (user) {
@@ -117,19 +130,22 @@ export default function Limits() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Navigation />
       <LimitWarning userId={user?.id} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Spending Limits</h1>
           <button
-            onClick={() => {
+            onClick={async () => {
+              const payday = user ? await getPaydayDate(user.id) : 1;
+              const periodStart = getPaydayPeriodStart(payday);
               setShowForm(true);
               setEditingLimit(null);
               setFormData({
                 period_type: 'monthly',
                 amount: '',
                 category_id: '',
-                start_date: format(new Date(), 'yyyy-MM-dd'),
+                start_date: format(periodStart, 'yyyy-MM-dd'),
               });
             }}
             className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"

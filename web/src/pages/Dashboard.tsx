@@ -22,6 +22,15 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import LimitWarning from '../components/LimitWarning';
+import Navigation from '../components/Navigation';
+import { getPaydayDate } from '../services/userSettingsService';
+import {
+  getPaydayPeriodStart,
+  getPaydayPeriodEnd,
+  getPreviousPaydayPeriod,
+  getPaydayPeriods,
+  formatPaydayPeriod,
+} from '../utils/paydayPeriod';
 import type { Transaction } from '../types';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'];
@@ -30,6 +39,7 @@ export default function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [selectedPeriod, setSelectedPeriod] = useState<'current' | 'last'>('current');
+  const [paydayDate, setPaydayDate] = useState<number>(1);
   const [balance, setBalance] = useState(0);
   const [income, setIncome] = useState(0);
   const [expense, setExpense] = useState(0);
@@ -37,13 +47,28 @@ export default function Dashboard() {
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [violations, setViolations] = useState<any[]>([]);
 
-  const startDate = selectedPeriod === 'current' 
-    ? format(startOfMonth(new Date()), 'yyyy-MM-dd')
-    : format(startOfMonth(subMonths(new Date(), 1)), 'yyyy-MM-dd');
-  
-  const endDate = selectedPeriod === 'current'
-    ? format(endOfMonth(new Date()), 'yyyy-MM-dd')
-    : format(endOfMonth(subMonths(new Date(), 1)), 'yyyy-MM-dd');
+  // Load payday date
+  useEffect(() => {
+    if (user) {
+      getPaydayDate(user.id).then(setPaydayDate);
+    }
+  }, [user]);
+
+  // Calculate period dates based on payday
+  const getPeriodDates = () => {
+    if (selectedPeriod === 'current') {
+      const start = getPaydayPeriodStart(paydayDate);
+      const end = getPaydayPeriodEnd(paydayDate);
+      return { start, end };
+    } else {
+      const prev = getPreviousPaydayPeriod(paydayDate);
+      return { start: prev.start, end: prev.end };
+    }
+  };
+
+  const { start, end } = getPeriodDates();
+  const startDate = format(start, 'yyyy-MM-dd');
+  const endDate = format(end, 'yyyy-MM-dd');
 
   const { transactions, loading } = useTransactions(user?.id, {
     startDate,
@@ -59,7 +84,7 @@ export default function Dashboard() {
       calculateCategoryData();
       checkViolations();
     }
-  }, [user, transactions, selectedPeriod]);
+  }, [user, transactions, selectedPeriod, paydayDate]);
 
   const calculateStats = () => {
     const totalIncome = transactions
@@ -77,31 +102,30 @@ export default function Dashboard() {
   const calculateMonthlyData = async () => {
     if (!user) return;
 
+    const periods = getPaydayPeriods(paydayDate, 6);
     const months = [];
-    for (let i = 5; i >= 0; i--) {
-      const monthStart = startOfMonth(subMonths(new Date(), i));
-      const monthEnd = endOfMonth(subMonths(new Date(), i));
-      
+
+    for (const period of periods) {
       try {
-        const monthTransactions = await getTransactions(user.id, {
-          startDate: format(monthStart, 'yyyy-MM-dd'),
-          endDate: format(monthEnd, 'yyyy-MM-dd'),
+        const periodTransactions = await getTransactions(user.id, {
+          startDate: format(period.start, 'yyyy-MM-dd'),
+          endDate: format(period.end, 'yyyy-MM-dd'),
         });
 
-        const monthIncome = monthTransactions
+        const periodIncome = periodTransactions
           .filter((t) => t.type === 'income')
           .reduce((sum, t) => sum + t.amount, 0);
-        const monthExpense = monthTransactions
+        const periodExpense = periodTransactions
           .filter((t) => t.type === 'expense')
           .reduce((sum, t) => sum + t.amount, 0);
 
         months.push({
-          month: format(monthStart, 'MMM'),
-          income: monthIncome,
-          expense: monthExpense,
+          month: format(period.start, 'MMM dd'),
+          income: periodIncome,
+          expense: periodExpense,
         });
       } catch (error) {
-        console.error('Error calculating monthly data:', error);
+        console.error('Error calculating period data:', error);
       }
     }
 
@@ -152,66 +176,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <LimitWarning userId={user?.id} />
-      <nav className="bg-white dark:bg-gray-800 shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center space-x-8">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">UangQu</h1>
-              <Link
-                to="/dashboard"
-                className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
-              >
-                Dashboard
-              </Link>
-              <Link
-                to="/transactions"
-                className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
-              >
-                Transactions
-              </Link>
-              <Link
-                to="/categories"
-                className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
-              >
-                Categories
-              </Link>
-              <Link
-                to="/limits"
-                className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
-              >
-                Limits
-              </Link>
-              <Link
-                to="/targets"
-                className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
-              >
-                Targets
-              </Link>
-              <Link
-                to="/export"
-                className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
-              >
-                Export
-              </Link>
-              <Link
-                to="/import"
-                className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
-              >
-                Import
-              </Link>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700 dark:text-gray-300">{user?.email}</span>
-              <button
-                onClick={handleSignOut}
-                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
-              >
-                Sign Out
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {/* Period Selector */}
@@ -225,7 +190,7 @@ export default function Dashboard() {
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
             >
-              Current Month
+              Current Period
             </button>
             <button
               onClick={() => setSelectedPeriod('last')}
@@ -235,9 +200,14 @@ export default function Dashboard() {
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
             >
-              Last Month
+              Last Period
             </button>
           </div>
+        </div>
+        <div className="mt-2 text-right">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Period: {formatPaydayPeriod(paydayDate)}
+          </p>
         </div>
 
         {/* Violations Warning */}

@@ -11,6 +11,8 @@ import Limits from './pages/Limits';
 import Targets from './pages/Targets';
 import Export from './pages/Export';
 import Import from './pages/Import';
+import ReceiptScan from './pages/ReceiptScan';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -73,6 +75,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <Import />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/receipt-scan"
+            element={
+              <ProtectedRoute>
+                <ReceiptScan />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
               </ProtectedRoute>
             }
           />
