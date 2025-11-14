@@ -1,0 +1,70 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.*.local
+web/.env
+mobile/.env
+
+# Build outputs
+dist/
+build/
+*/dist/
+*/build/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Expo
+.expo/
+.expo-shared/
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+
+# Vercel
+.vercel
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.jpg
+*.jpeg
+*.png
+!**/assets/**/*.png
+!**/assets/**/*.jpg
+!**/assets/**/*.jpeg
+plan.txt
+
